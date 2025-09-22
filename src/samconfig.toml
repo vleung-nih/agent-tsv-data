@@ -1,0 +1,11 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "expected-backend"
+resolve_s3 = true
+s3_prefix = "expected-backend"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "DataBucketName=\"vincent-expected-tsv-082625\" DataPrefix=\"tsv/\""
+image_repositories = ["ExpectedFunction=905418397328.dkr.ecr.us-east-1.amazonaws.com/expectedbackend357985b5/expectedfunction1ab25942repo"]

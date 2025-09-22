@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "Expected Agent (TSV -> expected.json) \u2014 Lambda (container) with\
+  \ Function URL"
+Parameters:
+  DataBucketName:
+    Type: String
+    Description: S3 bucket that stores TSVs (e.g., your newly created bucket)
+  DataPrefix:
+    Type: String
+    Default: tsv/
+    Description: S3 prefix where TSVs live (must end with /)
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 1024
+    Architectures:
+    - x86_64
+    Environment:
+      Variables:
+        DATA_BUCKET:
+          Ref: DataBucketName
+        DATA_PREFIX:
+          Ref: DataPrefix
+Resources:
+  ExpectedFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins:
+          - '*'
+          AllowMethods:
+          - POST
+          AllowHeaders:
+          - '*'
+      Policies:
+      - S3ReadPolicy:
+          BucketName:
+            Ref: DataBucketName
+      ImageUri: expectedfunction:latest
+    Metadata:
+      DockerContext: /Users/leungvw/agent-ui-tsv/src
+      DockerTag: latest
+      Dockerfile: Dockerfile
+      SamResourceId: ExpectedFunction
+Outputs:
+  FunctionUrl:
+    Description: HTTPS endpoint for the ExpectedFunction
+    Value:
+      Fn::GetAtt:
+      - ExpectedFunctionUrl
+      - FunctionUrl

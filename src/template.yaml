@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Expected Agent (TSV -> expected.json) — Lambda (container) with Function URL
+
+Parameters:
+  DataBucketName:
+    Type: String
+    Description: S3 bucket that stores TSVs (e.g., your newly created bucket)
+  DataPrefix:
+    Type: String
+    Default: tsv/
+    Description: S3 prefix where TSVs live (must end with /)
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 1024
+    Architectures: [x86_64]     # safe default for pandas wheels
+    Environment:
+      Variables:
+        DATA_BUCKET: !Ref DataBucketName
+        DATA_PREFIX: !Ref DataPrefix
+
+Resources:
+  ExpectedFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      # Create a public Function URL (no auth) for fast POC testing
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins: ['*']
+          AllowMethods: ['POST']
+          AllowHeaders: ['*']
+      Policies:
+        # Grant read-only access to your TSV bucket
+        - S3ReadPolicy:
+            BucketName: !Ref DataBucketName
+    Metadata:
+      # SAM uses this to build the container
+      DockerTag: latest
+      DockerContext: .
+      Dockerfile: Dockerfile
+
+Outputs:
+  FunctionUrl:
+    Description: HTTPS endpoint for the ExpectedFunction
+    Value: !GetAtt ExpectedFunctionUrl.FunctionUrl
